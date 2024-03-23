@@ -1,23 +1,48 @@
-import Profile from "../Profile/Profile.jsx"
-import FriendList from "../FriendList/FriendList.jsx"
-import TransactionHistory from "../TransactionHistory/TransactionHistory.jsx"
-import userData from "../../userData.json"
-import friends from"../../friends.json"
-import transactions from "../../transactions.json"
+import { useState } from "react"
+import { useEffect } from "react"
+import Description from "../Description/Description"
+import Options from "../Options/Options"
+import Feedback from "../Feedback/Feedback"
+import Notification from "../Notification/Notification"
+import css from "./App.module.css"
 
+const checkData = () => {
+  if (localStorage.getItem("data") !== null) {
+    return JSON.parse(localStorage.getItem("data"))
+  }
+  return {
+    good: 0,
+    neutral: 0,
+    bad: 0
+  }
+}
 export default function App() {
+  const [data, setData] = useState(checkData)
+  const totalFeedback = data.good + data.neutral + data.bad;
+  const positive = Math.round((data.good / totalFeedback) * 100)
+
+  const updateFeedback = feedbackType => {
+    setData({
+      ...data,
+      [feedbackType]: data[feedbackType] + 1
+    })
+  }
+  const resetFeedback = () => {
+    setData({
+      good: 0,
+      neutral: 0,
+      bad: 0
+    })
+  }
+  useEffect(() => {
+    localStorage.setItem("data", JSON.stringify(data))
+  }, [data])
   return (
-    <>
-      <Profile
-        name={userData.username}
-        tag={userData.tag}
-        location={userData.location}
-        image={userData.avatar}
-        stats={userData.stats}
-      />
-      <FriendList friends={friends} />
-      <TransactionHistory items={transactions} />
-    </>
+    <div className={css.container}>
+      <Description />
+      <Options updateFeedback={updateFeedback} resetFeedback={resetFeedback} totalFeedback={totalFeedback} />
+      {totalFeedback === 0 ? <Notification /> : <Feedback data={data} totalFeedback={totalFeedback} positive={positive} />}
+    </div>
   )
 }
 
